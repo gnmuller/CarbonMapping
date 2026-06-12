@@ -1,33 +1,91 @@
 import json
 import os
-from datetime import datetime, timezone
 from pathlib import Path
 
 import psycopg2
 import requests
 from dotenv import load_dotenv
 
+from psycopg2.extras import execute_values
+
+
+from datetime import datetime, timedelta, timezone
+
 load_dotenv()
 
 
+
+
+
+
 def main():
+
+
+
+
+    
+    WINDOW_DAYS = 60
+    now = datetime.now(timezone.utc)
+    end = now.replace(minute=0, second=0, microsecond=0)
+    start = end - timedelta(days=WINDOW_DAYS)
+
+    print(f"Fetching data from {start} to {end}")
+
+
+
+
+
+
+
+
     api_key = os.environ["EIA_API_KEY"]
 
-    response = requests.get(
-        "https://api.eia.gov/v2/electricity/rto/fuel-type-data/data/",
-        params={
-            "api_key": api_key,
-            "frequency": "hourly",
-            "data[0]": "value",
-            "sort[0][column]": "period",
-            "sort[0][direction]": "desc",
-            "offset": 0,
-            "length": 5000,
-        },
-    )
-    response.raise_for_status()
 
-    data = response.json()
+    params = {
+        "api_key": api_key,
+        "frequency": "hourly",
+        "data[0]": "value",
+        "start": start.strftime("%Y-%m-%dT%H"),   # e.g. 2026-04-13T00
+        "end": end.strftime("%Y-%m-%dT%H"),         # e.g. 2026-06-12T00
+        "sort[0][column]": "period",
+        "sort[0][direction]": "desc",
+        "offset": 0,
+        "length": 5000,
+    }
+
+
+    BASE_URL = "https://api.eia.gov/v2/electricity/rto/fuel-type-data/data/"
+
+    PAGE_SIZE = 5000
+    all_rows = []
+    offset = 0
+    payload: dict = {}
+    while True:
+        response = requests.get(
+            BASE_URL,
+            params={
+                **params,
+                "offset": offset,
+                "length": PAGE_SIZE,
+            },
+            timeout=60,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        batch = payload["response"]["data"]
+        if not batch:
+            break
+        all_rows.extend(batch)
+        if len(batch) < PAGE_SIZE:
+            break
+        offset += PAGE_SIZE
+
+
+
+
+
+    payload["response"]["data"] = all_rows
+    payload["response"]["total"] = len(all_rows)
 
     ingestion_dir = Path("ingestion")
     ingestion_dir.mkdir(exist_ok=True)
@@ -36,7 +94,7 @@ def main():
     output_path = ingestion_dir / f"daily-region-sub-ba-data_{timestamp}.json"
 
     with output_path.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(payload, f, indent=2)
 
     print(f"Saved to {output_path}")
 
@@ -81,27 +139,34 @@ def main():
         # 4. Execute the SQL command
         cursor.execute(create_table_query)
 
-        insert_query = """
-            INSERT INTO energy_data_w_fuel_type (
-                period, respondent, respondent_name, fueltype, type_name, value, value_units
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (period, respondent, fueltype) DO NOTHING
+        upsert_query  = """
+        INSERT INTO energy_data_w_fuel_type (
+            period, respondent, respondent_name, fueltype, type_name, value, value_units
+        ) VALUES %s
+        ON CONFLICT (period, respondent, fueltype)
+        DO UPDATE SET
+            respondent_name = EXCLUDED.respondent_name,
+            type_name = EXCLUDED.type_name,
+            value = EXCLUDED.value,
+            value_units = EXCLUDED.value_units;
             """
 
         rows = []
-        for row in data["response"]["data"]:
-            tuple_row = (
-                f"{row['period']}:00:00",
+        for row in all_rows:
+            period = datetime.fromisoformat(row["period"]).replace(tzinfo=timezone.utc)
+            rows.append((
+                period,
                 row["respondent"],
                 row["respondent-name"],
                 row["fueltype"],
                 row["type-name"],
                 row["value"],
                 row["value-units"],
-            )
-            rows.append(tuple_row)
+            ))
 
-        cursor.executemany(insert_query, rows)
+
+        execute_values(cursor, upsert_query, rows, page_size=1000)
+
         # 5. Commit the transaction to save changes
         connection.commit()
         print("Table 'energy_data_w_fuel_type' synced successfully!")
