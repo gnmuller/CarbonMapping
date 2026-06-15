@@ -1,0 +1,12 @@
+fuel_type_name,emissions_factor_gco2_per_kwh
+Battery storage,0.0
+Coal,0.92
+Natural Gas,0.49
+Nuclear,0.012
+Petroleum,0.73
+Other,0.15
+Pumped storage,0.011
+Solar,0.041
+Solar with integrated battery storage,0.041
+Hydro,0.011
+Wind,0.011

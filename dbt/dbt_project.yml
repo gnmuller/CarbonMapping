@@ -1,0 +1,20 @@
+name: carbonmapping
+version: 1.0.0
+profile: carbonmapping
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+
+# dbt_project.yml
+models:
+  carbonmapping:
+    Staging:
+      +schema: staging
+    Intermediate:
+      +materialized: view
+      +schema: intermediate
+    Marts:
+      +schema: marts

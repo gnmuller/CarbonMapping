@@ -2,3 +2,6 @@ pandas
 psycopg2-binary
 python-dotenv
 requests
+dbt-core>=1.10,<2
+dbt-postgres>=1.10,<2
+mashumaro[msgpack]>=3.17  # Python 3.14 needs mashumaro 3.17+; dbt-core 1.11 still pins <3.15

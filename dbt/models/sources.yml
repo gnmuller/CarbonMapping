@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: eia
+    description: Hourly RTO fuel-type generation data loaded by pull_and_sync_energy_data.py
+    database: CarbonMapping
+    schema: public
+    tables:
+      - name: energy_data_w_fuel_type
+        description: Raw hourly generation by respondent and fuel type from the EIA API
+        columns:
+          - name: id
+            description: Surrogate primary key
+          - name: period
+            description: Hourly timestamp (UTC)
+            tests:
+              - not_null
+          - name: respondent
+            description: EIA respondent code
+            tests:
+              - not_null
+          - name: respondent_name
+            description: Human-readable region name (e.g. New England)
+          - name: fueltype
+            description: EIA fuel type code
+          - name: type_name
+            description: Human-readable fuel type name
+          - name: value
+            description: Generation value
+          - name: value_units
+            description: Units for value (e.g. MW)
+          - name: created_at
+            description: Row insert timestamp
+        loaded_at_field: created_at

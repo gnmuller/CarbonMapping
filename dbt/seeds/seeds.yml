@@ -1,0 +1,17 @@
+version: 2
+
+seeds:
+  - name: emissions_factors
+    description: >
+      IPCC 2014 Fifth Assessment Report lifecycle emissions factors by fuel type (gCO₂/kWh).
+      Used to estimate carbon emissions from hourly generation data.
+    columns:
+      - name: fuel_type_name
+        description: Human-readable EIA fuel type name (joins to staging fuel_type_name)
+        tests:
+          - unique
+          - not_null
+      - name: emissions_factor_gco2_per_kwh
+        description: Grams of CO₂ equivalent per kWh of electricity generated
+        tests:
+          - not_null

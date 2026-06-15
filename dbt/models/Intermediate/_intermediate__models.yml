@@ -1,0 +1,25 @@
+# models/Intermediate/_intermediate__models.yml
+
+version: 2
+
+models:
+  - name: int_generation_with_emissions
+    description: Hourly generation joined to IPCC emissions factors with per-row CO₂
+    columns:
+      - name: energy_data_id
+        tests: [unique, not_null]
+      - name: period_utc
+        tests: [not_null]
+      - name: respondent
+        tests: [not_null]
+      - name: fuel_type
+        tests: [not_null]
+      - name: fuel_type_name
+        tests: [not_null]
+      - name: emissions_factor_gco2_per_kwh
+        tests:
+          - not_null:
+              config:
+                severity: warn   # flags unmapped fuel types from left join
+      - name: co2_grams
+        tests: [not_null]
