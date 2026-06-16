@@ -30,7 +30,7 @@ Thumbs.db
 # Data & logs (adjust as needed)
 *.log
 data/raw/
-ingestion/
+/ingestion/
 *.geojson.tmp
 logs/
 
