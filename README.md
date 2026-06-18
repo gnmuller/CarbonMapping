@@ -13,20 +13,9 @@ flowchart LR
     E --> F[Power BI dashboard]
 ```
 
-![Dagster asset graph showing EIA ingestion → dbt staging → marts](docs/screenshots/dagster-lineage.png)
-
 > **Why it matters:** Grid carbon intensity changes hour by hour. Utilities, EV charging apps. Sustainability teams need a reliable, repeatable pipeline. This project turns public EIA data into queryable carbon metrics.
 
 ---
-
-```mermaid
-flowchart LR
-    A[EIA-930 API] --> B[Ingestion]
-    B --> C[(Postgres / RDS)]
-    C --> D[dbt transforms]
-    D --> E[Dagster orchestration]
-    E --> F[Power BI dashboard]
-```
 
 ### Pipeline (Dagster)
 ![Dagster asset lineage: EIA ingestion → dbt staging → intermediate emissions join → marts](docs/screenshots/dagster-lineage.jpg)
