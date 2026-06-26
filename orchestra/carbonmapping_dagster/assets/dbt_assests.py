@@ -10,7 +10,7 @@ DBT_PROJECT_DIR = REPO_ROOT / "dbt"
 
 dbt_project = DbtProject(
     project_dir=DBT_PROJECT_DIR,
-    profiles_dir=DBT_PROJECT_DIR,  # your profiles.yml is here
+    profiles_dir=DBT_PROJECT_DIR,  # Profiles.yml is here
 )
 dbt_project.prepare_if_dev()  # auto-parse manifest in dev
 

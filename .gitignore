@@ -31,6 +31,8 @@ Thumbs.db
 *.log
 data/raw/
 /ingestion/
+orchestra/ingestion/
+orchestra/.tmp_dagster_home*/
 *.geojson.tmp
 logs/
 
